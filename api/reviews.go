@@ -1,19 +1,27 @@
 package api
 
 import (
+	"net/http"
+
 	"github.com/ONSdigital/log.go/log"
 	"github.com/cadmiumcat/books-api/apierrors"
 	"github.com/cadmiumcat/books-api/models"
 	"github.com/cadmiumcat/books-api/pagination"
 	"github.com/gorilla/mux"
-	"net/http"
 )
 
 func (api *API) addReviewHandler(writer http.ResponseWriter, request *http.Request) {
 	ctx := request.Context()
-	bookID := mux.Vars(request)["id"]
+	vars := mux.Vars(request)
+	apiVersion := vars["version"]
+	bookID := vars["id"]
+	logData := log.Data{"requested_api_version": apiVersion, "book_id": bookID}
 
-	logData := log.Data{"book_id": bookID}
+	apiVersion, err := validateAPIVersion(apiVersion)
+	if err != nil {
+		handleError(ctx, writer, err, logData)
+		return
+	}
 
 	if bookID == "" {
 		handleError(ctx, writer, apierrors.ErrEmptyBookID, logData)
@@ -26,7 +34,7 @@ func (api *API) addReviewHandler(writer http.ResponseWriter, request *http.Reque
 	}
 
 	// Confirm that book exists. If bookID not found, then a review cannot be added!
-	_, err := api.dataStore.GetBook(ctx, bookID)
+	_, err = api.dataStore.GetBook(ctx, bookID)
 	if err != nil {
 		handleError(ctx, writer, err, logData)
 		return
@@ -49,7 +57,7 @@ func (api *API) addReviewHandler(writer http.ResponseWriter, request *http.Reque
 
 	api.dataStore.AddReview(ctx, review)
 
-	if err := WriteJSONBody(review, writer, http.StatusCreated); err != nil {
+	if err := WriteJSONBody(review, writer, http.StatusCreated, apiVersion); err != nil {
 		handleError(ctx, writer, err, logData)
 		return
 	}
@@ -58,9 +66,16 @@ func (api *API) addReviewHandler(writer http.ResponseWriter, request *http.Reque
 
 func (api *API) getReviewsHandler(writer http.ResponseWriter, request *http.Request) {
 	ctx := request.Context()
-	bookID := mux.Vars(request)["id"]
+	vars := mux.Vars(request)
+	apiVersion := vars["version"]
+	bookID := vars["id"]
+	logData := log.Data{"requested_api_version": apiVersion, "book_id": bookID}
 
-	logData := log.Data{"book_id": bookID}
+	apiVersion, err := validateAPIVersion(apiVersion)
+	if err != nil {
+		handleError(ctx, writer, err, logData)
+		return
+	}
 
 	offset, limit, err := api.paginator.GetPaginationValues(request)
 	logData["offset"] = offset
@@ -98,7 +113,13 @@ func (api *API) getReviewsHandler(writer http.ResponseWriter, request *http.Requ
 		},
 	}
 
-	if err := WriteJSONBody(response, writer, http.StatusOK); err != nil {
+	// Update all links to contain the api version in front of the path
+	for i := range response.Items {
+		response.Items[i].Links.Book = "/" + apiVersion + response.Items[i].Links.Book
+		response.Items[i].Links.Self = "/" + apiVersion + response.Items[i].Links.Self
+	}
+
+	if err := WriteJSONBody(response, writer, http.StatusOK, apiVersion); err != nil {
 		handleError(ctx, writer, err, logData)
 		return
 	}
@@ -109,10 +130,17 @@ func (api *API) getReviewsHandler(writer http.ResponseWriter, request *http.Requ
 func (api *API) getReviewHandler(writer http.ResponseWriter, request *http.Request) {
 	ctx := request.Context()
 
-	bookID := mux.Vars(request)["id"]
-	reviewID := mux.Vars(request)["reviewID"]
+	vars := mux.Vars(request)
+	apiVersion := vars["version"]
+	bookID := vars["id"]
+	reviewID := vars["reviewID"]
+	logData := log.Data{"requested_api_version": apiVersion, "book_id": bookID, "review_id": reviewID}
 
-	logData := log.Data{"book_id": bookID, "review_id": reviewID}
+	apiVersion, err := validateAPIVersion(apiVersion)
+	if err != nil {
+		handleError(ctx, writer, err, logData)
+		return
+	}
 
 	if bookID == "" {
 		handleError(ctx, writer, apierrors.ErrEmptyBookID, logData)
@@ -125,7 +153,7 @@ func (api *API) getReviewHandler(writer http.ResponseWriter, request *http.Reque
 	}
 
 	// Confirm that book exists. If bookID not found, then do not check for the review
-	_, err := api.dataStore.GetBook(ctx, bookID)
+	_, err = api.dataStore.GetBook(ctx, bookID)
 	if err != nil {
 		handleError(ctx, writer, err, logData)
 		return
@@ -137,7 +165,13 @@ func (api *API) getReviewHandler(writer http.ResponseWriter, request *http.Reque
 		return
 	}
 
-	if err := WriteJSONBody(review, writer, http.StatusOK); err != nil {
+	// Update all links to contain the api version in front of the path
+	if review != nil && review.Links != nil {
+		review.Links.Book = "/" + apiVersion + review.Links.Book
+		review.Links.Self = "/" + apiVersion + review.Links.Self
+	}
+
+	if err := WriteJSONBody(review, writer, http.StatusOK, apiVersion); err != nil {
 		handleError(ctx, writer, err, logData)
 		return
 	}
@@ -147,6 +181,9 @@ func (api *API) getReviewHandler(writer http.ResponseWriter, request *http.Reque
 
 func (api *API) updateReviewHandler(writer http.ResponseWriter, request *http.Request) {
 	ctx := request.Context()
+	// TODO all endpoints, whether get, post, put, delete should handle API version! Previously only handled get
+	// TODO also need to handle failure scenarios to return header with version!
+	apiVersion := mux.Vars(request)["version"]
 
 	bookID := mux.Vars(request)["id"]
 	reviewID := mux.Vars(request)["reviewID"]
@@ -191,7 +228,7 @@ func (api *API) updateReviewHandler(writer http.ResponseWriter, request *http.Re
 		return
 	}
 
-	writer.Header().Set("Content-Type", "application/json; charset=utf-8")
+	writer.Header().Set("Content-Type", "application/vnd.books."+apiVersion+"+json; charset=utf-8")
 	writer.WriteHeader(http.StatusOK)
 
 }

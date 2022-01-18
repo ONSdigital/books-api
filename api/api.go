@@ -3,15 +3,17 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"io"
+	"io/ioutil"
+	"net/http"
+	"strings"
+
 	"github.com/ONSdigital/log.go/log"
 	"github.com/cadmiumcat/books-api/apierrors"
 	"github.com/cadmiumcat/books-api/interfaces"
 	"github.com/cadmiumcat/books-api/mongo"
 	"github.com/cadmiumcat/books-api/pagination"
 	"github.com/gorilla/mux"
-	"io"
-	"io/ioutil"
-	"net/http"
 )
 
 type API struct {
@@ -32,14 +34,28 @@ func Setup(ctx context.Context, host string, router *mux.Router, paginator inter
 		hc:        hc,
 	}
 
+	s := api.router.PathPrefix("/{version:v[0-9]+}").Subrouter()
+
 	// Endpoints
+	s.HandleFunc("/books", api.addBookHandler).Methods("POST")
 	api.router.HandleFunc("/books", api.addBookHandler).Methods("POST")
+
+	s.HandleFunc("/books", api.getBooksHandler).Methods("GET")
 	api.router.HandleFunc("/books", api.getBooksHandler).Methods("GET")
+
+	s.HandleFunc("/books/{id}", api.getBookHandler).Methods("GET")
 	api.router.HandleFunc("/books/{id}", api.getBookHandler).Methods("GET")
 
+	s.HandleFunc("/books/{id}/reviews", api.getReviewsHandler).Methods("GET")
 	api.router.HandleFunc("/books/{id}/reviews", api.getReviewsHandler).Methods("GET")
+
+	s.HandleFunc("/books/{id}/reviews", api.addReviewHandler).Methods("POST")
 	api.router.HandleFunc("/books/{id}/reviews", api.addReviewHandler).Methods("POST")
+
+	s.HandleFunc("/books/{id}/reviews/{reviewID}", api.getReviewHandler).Methods("GET")
 	api.router.HandleFunc("/books/{id}/reviews/{reviewID}", api.getReviewHandler).Methods("GET")
+
+	s.HandleFunc("/books/{id}/reviews/{reviewID}", api.updateReviewHandler).Methods("PUT")
 	api.router.HandleFunc("/books/{id}/reviews/{reviewID}", api.updateReviewHandler).Methods("PUT")
 
 	api.router.HandleFunc("/health", api.hc.Handler).Methods("GET")
@@ -51,10 +67,10 @@ func Setup(ctx context.Context, host string, router *mux.Router, paginator inter
 }
 
 // WriteJSONBody marshals the provided interface into json, and writes it to the response body.
-func WriteJSONBody(v interface{}, w http.ResponseWriter, httpStatus int) error {
+func WriteJSONBody(v interface{}, w http.ResponseWriter, httpStatus int, apiVersion string) error {
 
 	// Set headers
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Content-Type", "application/vnd.books."+apiVersion+"+json; charset=utf-8")
 	w.WriteHeader(httpStatus)
 
 	// Marshal provided model
@@ -94,25 +110,31 @@ func handleError(ctx context.Context, w http.ResponseWriter, err error, data log
 
 	if err != nil {
 		apiError = err
-		switch err {
-		case mongo.ErrBookNotFound,
-			mongo.ErrReviewNotFound:
+
+		if strings.Contains(apiError.Error(), apierrors.APIVersionErrorMessage) {
 			status = http.StatusNotFound
-		case apierrors.ErrRequiredFieldMissing,
-			apierrors.ErrEmptyRequestBody,
-			apierrors.ErrEmptyBookID,
-			apierrors.ErrEmptyReviewID,
-			apierrors.ErrInvalidReview,
-			apierrors.ErrEmptyReviewMessage,
-			apierrors.ErrEmptyReviewUser,
-			apierrors.ErrLongReviewMessage,
-			pagination.ErrInvalidLimitParameter,
-			pagination.ErrInvalidOffsetParameter,
-			pagination.ErrLimitOverMax:
-			status = http.StatusBadRequest
-		default:
-			apiError = apierrors.ErrInternalServer
-			status = http.StatusInternalServerError
+		} else {
+
+			switch err {
+			case mongo.ErrBookNotFound,
+				mongo.ErrReviewNotFound:
+				status = http.StatusNotFound
+			case apierrors.ErrRequiredFieldMissing,
+				apierrors.ErrEmptyRequestBody,
+				apierrors.ErrEmptyBookID,
+				apierrors.ErrEmptyReviewID,
+				apierrors.ErrInvalidReview,
+				apierrors.ErrEmptyReviewMessage,
+				apierrors.ErrEmptyReviewUser,
+				apierrors.ErrLongReviewMessage,
+				pagination.ErrInvalidLimitParameter,
+				pagination.ErrInvalidOffsetParameter,
+				pagination.ErrLimitOverMax:
+				status = http.StatusBadRequest
+			default:
+				apiError = apierrors.ErrInternalServer
+				status = http.StatusInternalServerError
+			}
 		}
 	}
 

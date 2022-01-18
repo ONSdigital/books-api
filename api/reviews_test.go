@@ -3,6 +3,13 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+	"time"
+
 	"github.com/cadmiumcat/books-api/apierrors"
 	"github.com/cadmiumcat/books-api/interfaces/mock"
 	"github.com/cadmiumcat/books-api/models"
@@ -11,12 +18,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	. "github.com/smartystreets/goconvey/convey"
-	"io/ioutil"
-	"net/http"
-	"net/http/httptest"
-	"strings"
-	"testing"
-	"time"
 )
 
 const (

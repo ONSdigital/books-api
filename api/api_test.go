@@ -3,16 +3,17 @@ package api
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
 	"github.com/cadmiumcat/books-api/apierrors"
 	"github.com/cadmiumcat/books-api/interfaces/mock"
 	"github.com/cadmiumcat/books-api/mongo"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	. "github.com/smartystreets/goconvey/convey"
-	"net/http"
-	"net/http/httptest"
-	"strings"
-	"testing"
 )
 
 func hasRoute(t *testing.T, r *mux.Router, path, method string) bool {
@@ -148,7 +149,7 @@ func TestWriteJSONBody(t *testing.T) {
 		badPayload := make(chan int)
 
 		Convey("When the WriteJSONBody function is called", func() {
-			err := WriteJSONBody(badPayload, httptest.NewRecorder(), http.StatusOK)
+			err := WriteJSONBody(badPayload, httptest.NewRecorder(), http.StatusOK, "v1")
 
 			Convey("An error is returned", func() {
 				So(err, ShouldBeError)

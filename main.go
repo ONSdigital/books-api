@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"errors"
+	"os"
+
 	dpHealthCheck "github.com/ONSdigital/dp-healthcheck/healthcheck"
 	dpMongoDB "github.com/ONSdigital/dp-mongodb/health"
 	"github.com/ONSdigital/log.go/log"
@@ -12,7 +14,6 @@ import (
 	"github.com/cadmiumcat/books-api/mongo"
 	"github.com/cadmiumcat/books-api/pagination"
 	"github.com/gorilla/mux"
-	"os"
 )
 
 const serviceName = "books-api"
