@@ -1,6 +1,6 @@
 module github.com/cadmiumcat/books-api
 
-go 1.15
+go 1.17
 
 require (
 	github.com/ONSdigital/dp-healthcheck v1.0.5
@@ -17,4 +17,15 @@ require (
 	github.com/smartystreets/goconvey v1.6.4
 	golang.org/x/net v0.0.0-20201021035429-f5854403a974 // indirect
 	golang.org/x/sys v0.0.0-20210225134936-a50acf3fe073 // indirect
+)
+
+require (
+	github.com/ONSdigital/dp-api-clients-go v1.28.0 // indirect
+	github.com/fatih/color v1.9.0 // indirect
+	github.com/hokaccha/go-prettyjson v0.0.0-20190818114111-108c894c2c0e // indirect
+	github.com/jtolds/gls v4.20.0+incompatible // indirect
+	github.com/justinas/alice v1.2.0 // indirect
+	github.com/mattn/go-colorable v0.1.4 // indirect
+	github.com/mattn/go-isatty v0.0.11 // indirect
+	github.com/square/mongo-lock v0.0.0-20191001051310-282c90e422d0 // indirect
 )
