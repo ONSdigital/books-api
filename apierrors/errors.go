@@ -1,6 +1,8 @@
 package apierrors
 
 import (
+	"fmt"
+
 	"github.com/pkg/errors"
 )
 
@@ -17,4 +19,10 @@ var (
 	ErrUnableToParseJSON    = errors.New("failed to parse json body")
 	ErrRequiredFieldMissing = errors.New("invalid book. Missing required field")
 	ErrInternalServer       = errors.New("internal server error")
+
+	APIVersionErrorMessage = "API version invalid, requires update to version in path"
 )
+
+func ErrAPIVersion(validVersions []string) error {
+	return fmt.Errorf("%v. Valid versions are: %v", APIVersionErrorMessage, validVersions)
+}
