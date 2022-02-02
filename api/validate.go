@@ -1,7 +1,7 @@
 package api
 
 import (
-	"github.com/cadmiumcat/books-api/apierrors"
+	"github.com/ONSdigital/books-api/apierrors"
 )
 
 var (

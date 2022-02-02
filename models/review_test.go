@@ -2,10 +2,11 @@ package models
 
 import (
 	"fmt"
-	"github.com/cadmiumcat/books-api/apierrors"
-	. "github.com/smartystreets/goconvey/convey"
 	"math/rand"
 	"testing"
+
+	"github.com/ONSdigital/books-api/apierrors"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 const bookID = "123"

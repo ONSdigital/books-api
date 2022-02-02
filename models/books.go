@@ -2,10 +2,11 @@ package models
 
 import (
 	"fmt"
-	"github.com/cadmiumcat/books-api/apierrors"
-	"github.com/cadmiumcat/books-api/pagination"
-	uuid "github.com/satori/go.uuid"
 	"time"
+
+	"github.com/ONSdigital/books-api/apierrors"
+	"github.com/ONSdigital/books-api/pagination"
+	uuid "github.com/satori/go.uuid"
 )
 
 // A Book contains the fields that identify a book and its status.

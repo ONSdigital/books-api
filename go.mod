@@ -1,4 +1,4 @@
-module github.com/cadmiumcat/books-api
+module github.com/ONSdigital/books-api
 
 go 1.17
 

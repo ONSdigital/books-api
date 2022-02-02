@@ -5,8 +5,8 @@ package mock
 
 import (
 	"context"
+	"github.com/ONSdigital/books-api/interfaces"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
-	"github.com/cadmiumcat/books-api/interfaces"
 	"net/http"
 	"sync"
 )

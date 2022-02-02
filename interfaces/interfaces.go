@@ -2,10 +2,11 @@ package interfaces
 
 import (
 	"context"
-	"github.com/ONSdigital/dp-healthcheck/healthcheck"
-	"github.com/cadmiumcat/books-api/config"
-	"github.com/cadmiumcat/books-api/models"
 	"net/http"
+
+	"github.com/ONSdigital/books-api/config"
+	"github.com/ONSdigital/books-api/models"
+	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 )
 
 //go:generate moq -out mock/paginator.go -pkg mock . Paginator

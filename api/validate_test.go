@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cadmiumcat/books-api/apierrors"
+	"github.com/ONSdigital/books-api/apierrors"
 	. "github.com/smartystreets/goconvey/convey"
 )
 

@@ -5,9 +5,9 @@ package mock
 
 import (
 	"context"
-	"github.com/cadmiumcat/books-api/config"
-	"github.com/cadmiumcat/books-api/interfaces"
-	"github.com/cadmiumcat/books-api/models"
+	"github.com/ONSdigital/books-api/config"
+	"github.com/ONSdigital/books-api/interfaces"
+	"github.com/ONSdigital/books-api/models"
 	"sync"
 )
 

@@ -8,11 +8,11 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/ONSdigital/books-api/apierrors"
+	"github.com/ONSdigital/books-api/interfaces"
+	"github.com/ONSdigital/books-api/mongo"
+	"github.com/ONSdigital/books-api/pagination"
 	"github.com/ONSdigital/log.go/log"
-	"github.com/cadmiumcat/books-api/apierrors"
-	"github.com/cadmiumcat/books-api/interfaces"
-	"github.com/cadmiumcat/books-api/mongo"
-	"github.com/cadmiumcat/books-api/pagination"
 	"github.com/gorilla/mux"
 )
 
@@ -37,33 +37,30 @@ func Setup(ctx context.Context, host string, router *mux.Router, paginator inter
 	s := api.router.PathPrefix("/{version:v[0-9]+}").Subrouter()
 
 	// Endpoints
-	s.HandleFunc("/books", api.addBookHandler).Methods("POST")
-	api.router.HandleFunc("/books", api.addBookHandler).Methods("POST")
+	s.HandleFunc("/books", api.addBookHandler).Methods(http.MethodPost)
+	api.router.HandleFunc("/books", api.addBookHandler).Methods(http.MethodPost)
 
-	s.HandleFunc("/books", api.getBooksHandler).Methods("GET")
-	api.router.HandleFunc("/books", api.getBooksHandler).Methods("GET")
+	s.HandleFunc("/books", api.getBooksHandler).Methods(http.MethodGet)
+	api.router.HandleFunc("/books", api.getBooksHandler).Methods(http.MethodGet)
 
-	s.HandleFunc("/books/{id}", api.getBookHandler).Methods("GET")
-	api.router.HandleFunc("/books/{id}", api.getBookHandler).Methods("GET")
+	s.HandleFunc("/books/{id}", api.getBookHandler).Methods(http.MethodGet)
+	api.router.HandleFunc("/books/{id}", api.getBookHandler).Methods(http.MethodGet)
 
-	s.HandleFunc("/books/{id}/reviews", api.getReviewsHandler).Methods("GET")
-	api.router.HandleFunc("/books/{id}/reviews", api.getReviewsHandler).Methods("GET")
+	s.HandleFunc("/books/{id}/reviews", api.getReviewsHandler).Methods(http.MethodGet)
+	api.router.HandleFunc("/books/{id}/reviews", api.getReviewsHandler).Methods(http.MethodGet)
 
-	s.HandleFunc("/books/{id}/reviews", api.addReviewHandler).Methods("POST")
-	api.router.HandleFunc("/books/{id}/reviews", api.addReviewHandler).Methods("POST")
+	s.HandleFunc("/books/{id}/reviews", api.addReviewHandler).Methods(http.MethodPost)
+	api.router.HandleFunc("/books/{id}/reviews", api.addReviewHandler).Methods(http.MethodPost)
 
-	s.HandleFunc("/books/{id}/reviews/{reviewID}", api.getReviewHandler).Methods("GET")
-	api.router.HandleFunc("/books/{id}/reviews/{reviewID}", api.getReviewHandler).Methods("GET")
+	s.HandleFunc("/books/{id}/reviews/{reviewID}", api.getReviewHandler).Methods(http.MethodGet)
+	api.router.HandleFunc("/books/{id}/reviews/{reviewID}", api.getReviewHandler).Methods(http.MethodGet)
 
-	s.HandleFunc("/books/{id}/reviews/{reviewID}", api.updateReviewHandler).Methods("PUT")
-	api.router.HandleFunc("/books/{id}/reviews/{reviewID}", api.updateReviewHandler).Methods("PUT")
+	s.HandleFunc("/books/{id}/reviews/{reviewID}", api.updateReviewHandler).Methods(http.MethodPut)
+	api.router.HandleFunc("/books/{id}/reviews/{reviewID}", api.updateReviewHandler).Methods(http.MethodPut)
 
-	api.router.HandleFunc("/health", api.hc.Handler).Methods("GET")
-
-	log.Event(ctx, "enabling endpoints", log.INFO, log.Data{"bind_addr": api.host})
+	api.router.HandleFunc("/health", api.hc.Handler).Methods(http.MethodGet)
 
 	return api
-
 }
 
 // WriteJSONBody marshals the provided interface into json, and writes it to the response body.

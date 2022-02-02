@@ -4,7 +4,7 @@
 package mock
 
 import (
-	"github.com/cadmiumcat/books-api/interfaces"
+	"github.com/ONSdigital/books-api/interfaces"
 	"sync"
 )
 
