@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"sync"
 
 	"github.com/ONSdigital/books-api/apierrors"
 	"github.com/ONSdigital/books-api/interfaces"
@@ -17,46 +18,59 @@ import (
 )
 
 type API struct {
-	host      string
-	router    *mux.Router
-	paginator interfaces.Paginator
-	dataStore interfaces.DataStore
-	hc        interfaces.HealthChecker
+	host          string
+	router        *mux.Router
+	paginator     interfaces.Paginator
+	dataStore     interfaces.DataStore
+	hc            interfaces.HealthChecker
+	latestVersion string
 }
 
+var latestVersionMutex sync.Mutex
+
 // Setup sets up the endpoints.
-func Setup(ctx context.Context, host string, router *mux.Router, paginator interfaces.Paginator, dataStore interfaces.DataStore, hc interfaces.HealthChecker) *API {
+func Setup(ctx context.Context, host string, router *mux.Router, paginator interfaces.Paginator, dataStore interfaces.DataStore, hc interfaces.HealthChecker, latestApiVersion string) *API {
+
 	api := &API{
-		host:      host,
-		router:    router,
-		paginator: paginator,
-		dataStore: dataStore,
-		hc:        hc,
+		host:          host,
+		router:        router,
+		paginator:     paginator,
+		dataStore:     dataStore,
+		hc:            hc,
+		latestVersion: latestApiVersion,
 	}
 
-	s := api.router.PathPrefix("/{version:v[0-9]+}").Subrouter()
+	api1 := api.router.PathPrefix("/{version:v1}").Subrouter()
+	api2 := api.router.PathPrefix("/{version:v2}").Subrouter()
 
 	// Endpoints
-	s.HandleFunc("/books", api.addBookHandler).Methods(http.MethodPost)
 	api.router.HandleFunc("/books", api.addBookHandler).Methods(http.MethodPost)
+	api1.HandleFunc("/books", api.addBookHandler).Methods(http.MethodPost)
+	api2.HandleFunc("/books", api.addBookHandler).Methods(http.MethodPost)
 
-	s.HandleFunc("/books", api.getBooksHandler).Methods(http.MethodGet)
 	api.router.HandleFunc("/books", api.getBooksHandler).Methods(http.MethodGet)
+	api1.HandleFunc("/books", api.getBooksHandler).Methods(http.MethodGet)
+	api2.HandleFunc("/books", api.getBooksHandler).Methods(http.MethodGet)
 
-	s.HandleFunc("/books/{id}", api.getBookHandler).Methods(http.MethodGet)
 	api.router.HandleFunc("/books/{id}", api.getBookHandler).Methods(http.MethodGet)
+	api1.HandleFunc("/books/{id}", api.getBookHandler).Methods(http.MethodGet)
+	api2.HandleFunc("/books/{id}", api.getBookHandler).Methods(http.MethodGet)
 
-	s.HandleFunc("/books/{id}/reviews", api.getReviewsHandler).Methods(http.MethodGet)
 	api.router.HandleFunc("/books/{id}/reviews", api.getReviewsHandler).Methods(http.MethodGet)
+	api1.HandleFunc("/books/{id}/reviews", api.getReviewsHandler).Methods(http.MethodGet)
+	api2.HandleFunc("/books/{id}/reviews", api.getReviewsHandler).Methods(http.MethodGet)
 
-	s.HandleFunc("/books/{id}/reviews", api.addReviewHandler).Methods(http.MethodPost)
 	api.router.HandleFunc("/books/{id}/reviews", api.addReviewHandler).Methods(http.MethodPost)
+	api1.HandleFunc("/books/{id}/reviews", api.addReviewHandler).Methods(http.MethodPost)
+	api2.HandleFunc("/books/{id}/reviews", api.addReviewHandler).Methods(http.MethodPost)
 
-	s.HandleFunc("/books/{id}/reviews/{reviewID}", api.getReviewHandler).Methods(http.MethodGet)
 	api.router.HandleFunc("/books/{id}/reviews/{reviewID}", api.getReviewHandler).Methods(http.MethodGet)
+	api1.HandleFunc("/books/{id}/reviews/{reviewID}", api.getReviewHandler).Methods(http.MethodGet)
+	api2.HandleFunc("/books/{id}/reviews/{reviewID}", api.getReviewHandler).Methods(http.MethodGet)
 
-	s.HandleFunc("/books/{id}/reviews/{reviewID}", api.updateReviewHandler).Methods(http.MethodPut)
 	api.router.HandleFunc("/books/{id}/reviews/{reviewID}", api.updateReviewHandler).Methods(http.MethodPut)
+	api1.HandleFunc("/books/{id}/reviews/{reviewID}", api.updateReviewHandler).Methods(http.MethodPut)
+	api2.HandleFunc("/books/{id}/reviews/{reviewID}", api.updateReviewHandler).Methods(http.MethodPut)
 
 	api.router.HandleFunc("/health", api.hc.Handler).Methods(http.MethodGet)
 

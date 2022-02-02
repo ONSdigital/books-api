@@ -17,12 +17,6 @@ func (api *API) addReviewHandler(writer http.ResponseWriter, request *http.Reque
 	bookID := vars["id"]
 	logData := log.Data{"requested_api_version": apiVersion, "book_id": bookID}
 
-	apiVersion, err := validateAPIVersion(apiVersion)
-	if err != nil {
-		handleError(ctx, writer, err, logData)
-		return
-	}
-
 	if bookID == "" {
 		handleError(ctx, writer, apierrors.ErrEmptyBookID, logData)
 		return
@@ -33,8 +27,12 @@ func (api *API) addReviewHandler(writer http.ResponseWriter, request *http.Reque
 		return
 	}
 
+	if apiVersion == "" {
+		apiVersion = api.latestVersion
+	}
+
 	// Confirm that book exists. If bookID not found, then a review cannot be added!
-	_, err = api.dataStore.GetBook(ctx, bookID)
+	_, err := api.dataStore.GetBook(ctx, bookID)
 	if err != nil {
 		handleError(ctx, writer, err, logData)
 		return
@@ -71,10 +69,8 @@ func (api *API) getReviewsHandler(writer http.ResponseWriter, request *http.Requ
 	bookID := vars["id"]
 	logData := log.Data{"requested_api_version": apiVersion, "book_id": bookID}
 
-	apiVersion, err := validateAPIVersion(apiVersion)
-	if err != nil {
-		handleError(ctx, writer, err, logData)
-		return
+	if apiVersion == "" {
+		apiVersion = api.latestVersion
 	}
 
 	offset, limit, err := api.paginator.GetPaginationValues(request)
@@ -136,10 +132,8 @@ func (api *API) getReviewHandler(writer http.ResponseWriter, request *http.Reque
 	reviewID := vars["reviewID"]
 	logData := log.Data{"requested_api_version": apiVersion, "book_id": bookID, "review_id": reviewID}
 
-	apiVersion, err := validateAPIVersion(apiVersion)
-	if err != nil {
-		handleError(ctx, writer, err, logData)
-		return
+	if apiVersion == "" {
+		apiVersion = api.latestVersion
 	}
 
 	if bookID == "" {
@@ -153,7 +147,7 @@ func (api *API) getReviewHandler(writer http.ResponseWriter, request *http.Reque
 	}
 
 	// Confirm that book exists. If bookID not found, then do not check for the review
-	_, err = api.dataStore.GetBook(ctx, bookID)
+	_, err := api.dataStore.GetBook(ctx, bookID)
 	if err != nil {
 		handleError(ctx, writer, err, logData)
 		return
@@ -165,11 +159,13 @@ func (api *API) getReviewHandler(writer http.ResponseWriter, request *http.Reque
 		return
 	}
 
+	latestVersionMutex.Lock()
 	// Update all links to contain the api version in front of the path
 	if review != nil && review.Links != nil {
 		review.Links.Book = "/" + apiVersion + review.Links.Book
 		review.Links.Self = "/" + apiVersion + review.Links.Self
 	}
+	latestVersionMutex.Unlock()
 
 	if err := WriteJSONBody(review, writer, http.StatusOK, apiVersion); err != nil {
 		handleError(ctx, writer, err, logData)
@@ -198,6 +194,10 @@ func (api *API) updateReviewHandler(writer http.ResponseWriter, request *http.Re
 	if reviewID == "" {
 		handleError(ctx, writer, apierrors.ErrEmptyReviewID, logData)
 		return
+	}
+
+	if apiVersion == "" {
+		apiVersion = api.latestVersion
 	}
 
 	// Confirm that book exists. If bookID not found, or there's another error, then return

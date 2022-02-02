@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"strconv"
 	"strings"
 	"testing"
@@ -9,15 +10,16 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestValidateAPIVersionFunc(t *testing.T) {
+func TestGetValidVersionFunc(t *testing.T) {
 	t.Parallel()
+	testCtx := context.Background()
 
-	Convey("Given a valid API version is set", t, func() {
+	Convey("Given a valid API version is set by service", t, func() {
 		v := getValidVersion()
 
-		Convey("When calling the validateAPIVersion func", func() {
+		Convey("When calling the getLatestVersion func", func() {
 			Convey("Then the version is returned with no errors", func() {
-				version, err := validateAPIVersion(v)
+				version, err := GetLatestVersion(testCtx, v)
 				So(version, ShouldEqual, v)
 				So(err, ShouldBeNil)
 			})
@@ -27,11 +29,11 @@ func TestValidateAPIVersionFunc(t *testing.T) {
 	Convey("Given the API version is not set", t, func() {
 		v := ""
 
-		Convey("When calling the validateAPIVersion func", func() {
+		Convey("When calling the getLatestVersion func", func() {
 			Convey("Then the latest version is returned with no errors", func() {
-				version, err := validateAPIVersion(v)
-				So(version, ShouldEqual, latest)
-				So(err, ShouldBeNil)
+				version, err := GetLatestVersion(testCtx, v)
+				So(version, ShouldEqual, defaultLatest)
+				So(err, ShouldResemble, apierrors.ErrAPIVersion(ValidVersions))
 			})
 		})
 	})
@@ -39,11 +41,11 @@ func TestValidateAPIVersionFunc(t *testing.T) {
 	Convey("Given the API version is not valid", t, func() {
 		v := getInvalidVersion()
 
-		Convey("When calling the validateAPIVersion func", func() {
+		Convey("When calling the getLatestVersion func", func() {
 			Convey("Then the latest version is returned with no errors", func() {
-				version, err := validateAPIVersion(v)
-				So(version, ShouldEqual, v)
-				So(err, ShouldResemble, apierrors.ErrAPIVersion(validVersions))
+				version, err := GetLatestVersion(testCtx, v)
+				So(version, ShouldEqual, defaultLatest)
+				So(err, ShouldResemble, apierrors.ErrAPIVersion(ValidVersions))
 			})
 		})
 	})
@@ -57,7 +59,7 @@ func getValidVersion() string {
 		}
 	}
 
-	return latest
+	return defaultLatest
 }
 
 // getInvalidVersion retrieves an invalid version

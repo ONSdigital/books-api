@@ -27,7 +27,7 @@ func TestSetup(t *testing.T) {
 	Convey("Given an API instance", t, func() {
 		r := mux.NewRouter()
 		ctx := context.Background()
-		api := Setup(ctx, "", r, &mock.PaginatorMock{}, &mock.DataStoreMock{}, &mock.HealthCheckerMock{})
+		api := Setup(ctx, "", r, &mock.PaginatorMock{}, &mock.DataStoreMock{}, &mock.HealthCheckerMock{}, "v1")
 
 		Convey("When created the following routes should have been added", func() {
 			So(hasRoute(t, api.router, "/books", "GET"), ShouldBeTrue)
@@ -36,6 +36,24 @@ func TestSetup(t *testing.T) {
 			So(hasRoute(t, api.router, "/books/{id}/reviews", "GET"), ShouldBeTrue)
 			So(hasRoute(t, api.router, "/books/{id}/reviews", "POST"), ShouldBeTrue)
 			So(hasRoute(t, api.router, "/books/{id}/reviews/{review_id}", "GET"), ShouldBeTrue)
+			So(hasRoute(t, api.router, "/v1/books", "GET"), ShouldBeTrue)
+			So(hasRoute(t, api.router, "/v1/books", "POST"), ShouldBeTrue)
+			So(hasRoute(t, api.router, "/v1/books/{id}", "GET"), ShouldBeTrue)
+			So(hasRoute(t, api.router, "/v1/books/{id}/reviews", "GET"), ShouldBeTrue)
+			So(hasRoute(t, api.router, "/v1/books/{id}/reviews", "POST"), ShouldBeTrue)
+			So(hasRoute(t, api.router, "/v1/books/{id}/reviews/{review_id}", "GET"), ShouldBeTrue)
+			So(hasRoute(t, api.router, "/v2/books", "GET"), ShouldBeTrue)
+			So(hasRoute(t, api.router, "/v2/books", "POST"), ShouldBeTrue)
+			So(hasRoute(t, api.router, "/v2/books/{id}", "GET"), ShouldBeTrue)
+			So(hasRoute(t, api.router, "/v2/books/{id}/reviews", "GET"), ShouldBeTrue)
+			So(hasRoute(t, api.router, "/v2/books/{id}/reviews", "POST"), ShouldBeTrue)
+			So(hasRoute(t, api.router, "/v2/books/{id}/reviews/{review_id}", "GET"), ShouldBeTrue)
+			So(hasRoute(t, api.router, "/v3/books", "GET"), ShouldBeFalse)
+			So(hasRoute(t, api.router, "/v3/books", "POST"), ShouldBeFalse)
+			So(hasRoute(t, api.router, "/v3/books/{id}", "GET"), ShouldBeFalse)
+			So(hasRoute(t, api.router, "/v3/books/{id}/reviews", "GET"), ShouldBeFalse)
+			So(hasRoute(t, api.router, "/v3/books/{id}/reviews", "POST"), ShouldBeFalse)
+			So(hasRoute(t, api.router, "/v3/books/{id}/reviews/{review_id}", "GET"), ShouldBeFalse)
 		})
 	})
 }
@@ -94,7 +112,6 @@ func TestHandleError(t *testing.T) {
 			})
 		}
 	})
-
 }
 
 type errReader int

@@ -1,10 +1,11 @@
 package config
 
 import (
-	. "github.com/smartystreets/goconvey/convey"
 	"os"
 	"testing"
 	"time"
+
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestConfig(t *testing.T) {
@@ -24,6 +25,7 @@ func TestConfig(t *testing.T) {
 				So(cfg.DefaultMaximumLimit, ShouldEqual, 1000)
 				So(cfg.DefaultLimit, ShouldEqual, 20)
 				So(cfg.DefaultOffset, ShouldEqual, 0)
+				So(cfg.LatestApiVersion, ShouldEqual, "")
 			})
 			Convey("And there should be no errors", func() {
 				So(err, ShouldBeNil)

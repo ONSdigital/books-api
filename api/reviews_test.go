@@ -33,24 +33,6 @@ const (
 	internalSeverErrorMessage = "internal server error\n"
 )
 
-var bookReview1 = models.Review{
-	ID: reviewID1,
-	Links: &models.ReviewLink{
-		Book: bookID1,
-	},
-	User: models.User{
-		Forenames: "name",
-		Surname:   "surname",
-	},
-}
-
-var bookReview2 = models.Review{
-	ID: reviewID2,
-	Links: &models.ReviewLink{
-		Book: bookID1,
-	},
-}
-
 var reviewUpdated = models.Review{
 	ID: reviewID1,
 	User: models.User{
@@ -123,12 +105,13 @@ func TestGetReviewHandler(t *testing.T) {
 	})
 
 	Convey("Given an existing book with at least one review (review_id=123)", t, func() {
+		bookReview := createBookReview(bookID1, reviewID1, true)
 		mockDataStore := &mock.DataStoreMock{
 			GetBookFunc: func(ctx context.Context, id string) (*models.Book, error) {
 				return &models.Book{ID: bookID1}, nil
 			},
 			GetReviewFunc: func(ctx context.Context, id string) (*models.Review, error) {
-				return &bookReview1, nil
+				return &bookReview, nil
 			},
 		}
 
@@ -151,7 +134,7 @@ func TestGetReviewHandler(t *testing.T) {
 			Convey("And the GetReview function is called once", func() {
 				So(mockDataStore.GetBookCalls(), ShouldHaveLength, 1)
 				So(mockDataStore.GetReviewCalls(), ShouldHaveLength, 1)
-				So(response.Body.String(), ShouldEqual, marshalJSON(t, bookReview1))
+				So(response.Body.String(), ShouldEqual, marshalJSON(t, bookReview))
 			})
 		})
 	})
@@ -301,6 +284,9 @@ func TestGetReviewsHandler(t *testing.T) {
 	})
 
 	Convey("Given a book with one or more reviews", t, func() {
+		bookReview1 := createBookReview(bookID1, reviewID1, true)
+		bookReview2 := createBookReview(bookID2, reviewID2, false)
+
 		mockDataStore := &mock.DataStoreMock{
 			GetBookFunc: func(ctx context.Context, id string) (*models.Book, error) {
 				return &models.Book{ID: bookID1}, nil
@@ -876,4 +862,22 @@ func TestUpdateReviewHandler(t *testing.T) {
 			})
 		})
 	})
+}
+
+func createBookReview(bookID, reviewID string, hasUser bool) (bookReview models.Review) {
+	bookReview = models.Review{
+		ID: reviewID,
+		Links: &models.ReviewLink{
+			Book: bookID,
+		},
+	}
+
+	if hasUser {
+		bookReview.User = models.User{
+			Forenames: "name",
+			Surname:   "surname",
+		}
+	}
+
+	return bookReview
 }

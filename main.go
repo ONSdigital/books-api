@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/ONSdigital/books-api/api"
+	"github.com/ONSdigital/books-api/apierrors"
 	"github.com/ONSdigital/books-api/config"
 	"github.com/ONSdigital/books-api/initialiser"
 	"github.com/ONSdigital/books-api/mongo"
@@ -82,7 +83,12 @@ func main() {
 
 	paginator := pagination.NewPaginator(cfg.DefaultLimit, cfg.DefaultOffset, cfg.DefaultMaximumLimit)
 
-	svc.API = api.Setup(ctx, cfg.BindAddr, router, paginator, mongodb, &hc)
+	latestAPIVersion, err := api.GetLatestVersion(ctx, cfg.LatestApiVersion)
+	if err != nil {
+		log.Event(ctx, "configured version not valid", log.WARN, log.Error(apierrors.ErrAPIVersion(api.ValidVersions)))
+	}
+
+	svc.API = api.Setup(ctx, cfg.BindAddr, router, paginator, mongodb, &hc, latestAPIVersion)
 
 	svc.Server.ListenAndServe()
 

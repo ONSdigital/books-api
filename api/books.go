@@ -16,10 +16,8 @@ func (api *API) addBookHandler(writer http.ResponseWriter, request *http.Request
 	apiVersion := vars["version"]
 	logData := log.Data{"requested_api_version": apiVersion}
 
-	apiVersion, err := validateAPIVersion(apiVersion)
-	if err != nil {
-		handleError(ctx, writer, err, logData)
-		return
+	if apiVersion == "" {
+		apiVersion = api.latestVersion
 	}
 
 	if request.ContentLength == 0 {
@@ -35,7 +33,7 @@ func (api *API) addBookHandler(writer http.ResponseWriter, request *http.Request
 
 	logData["book"] = book
 
-	err = book.Validate()
+	err := book.Validate()
 	if err != nil {
 		handleError(ctx, writer, err, logData)
 		return
@@ -55,10 +53,8 @@ func (api *API) getBooksHandler(writer http.ResponseWriter, request *http.Reques
 	apiVersion := vars["version"]
 	logData := log.Data{"requested_api_version": apiVersion}
 
-	apiVersion, err := validateAPIVersion(apiVersion)
-	if err != nil {
-		handleError(ctx, writer, err, logData)
-		return
+	if apiVersion == "" {
+		apiVersion = api.latestVersion
 	}
 
 	offset, limit, err := api.paginator.GetPaginationValues(request)
@@ -85,6 +81,8 @@ func (api *API) getBooksHandler(writer http.ResponseWriter, request *http.Reques
 		},
 	}
 
+	log.Event(ctx, "version is", log.INFO, log.Data{"version": apiVersion})
+
 	// Update all links to contain the api version in front of the path
 	for i := range response.Items {
 		if response.Items[i].Links != nil {
@@ -109,10 +107,8 @@ func (api *API) getBookHandler(writer http.ResponseWriter, request *http.Request
 	id := vars["id"]
 	logData := log.Data{"requested_api_version": apiVersion, "book_id": id}
 
-	apiVersion, err := validateAPIVersion(apiVersion)
-	if err != nil {
-		handleError(ctx, writer, err, logData)
-		return
+	if apiVersion == "" {
+		apiVersion = api.latestVersion
 	}
 
 	if id == "" {

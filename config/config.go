@@ -1,8 +1,9 @@
 package config
 
 import (
-	"github.com/kelseyhightower/envconfig"
 	"time"
+
+	"github.com/kelseyhightower/envconfig"
 )
 
 type Configuration struct {
@@ -10,9 +11,10 @@ type Configuration struct {
 	HealthCheckCriticalTimeout time.Duration
 	HealthCheckInterval        time.Duration
 	MongoConfig                MongoConfig
-	DefaultMaximumLimit        int `envconfig:"DEFAULT_MAXIMUM_LIMIT"`
-	DefaultLimit               int `envconfig:"DEFAULT_LIMIT"`
-	DefaultOffset              int `envconfig:"DEFAULT_OFFSET"`
+	DefaultMaximumLimit        int    `envconfig:"DEFAULT_MAXIMUM_LIMIT"`
+	DefaultLimit               int    `envconfig:"DEFAULT_LIMIT"`
+	DefaultOffset              int    `envconfig:"DEFAULT_OFFSET"`
+	LatestApiVersion           string `envconfig:"LATEST_API_VERSION"`
 }
 
 type MongoConfig struct {
@@ -43,6 +45,7 @@ func Get() (*Configuration, error) {
 		DefaultMaximumLimit: 1000,
 		DefaultLimit:        20,
 		DefaultOffset:       0,
+		LatestApiVersion:    "",
 	}
 
 	err := envconfig.Process("", cfg)
